@@ -85,15 +85,24 @@
       (some? metadata)
       (with-meta metadata))))
 
+(defn apply-meta
+  [schema metadata]
+  (swagger/field schema metadata))
+
 (defn validator-vec->swagger-parameter-spec
   [validator-vec] 
   (letfn [(resolve-type
-           [spec-vec]
-           (let [reversed (reverse spec-vec)]
-             (some type-of-validator reversed)))]
+           [spec-vec metadata] 
+           (let [reversed (reverse spec-vec)
+                 resolved (some type-of-validator reversed)]
+             (when resolved
+               (if (some? metadata)
+                 (apply-meta resolved metadata)
+                 resolved))))]
     
-    (let [validator-vec (cond 
-                          (st/validator? validator-vec) 
+    (let [metadata (meta validator-vec)
+          validator-vec (cond
+                          (st/validator? validator-vec)
                           [validator-vec]
                           
                           (map? validator-vec)
@@ -101,7 +110,7 @@
 
                           :else
                           validator-vec)]
-      (resolve-type validator-vec))))
+      (resolve-type validator-vec metadata))))
 
 (defn validator-map->swagger-parameter-spec
   [param-validators-map]

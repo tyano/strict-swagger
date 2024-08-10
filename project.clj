@@ -10,5 +10,6 @@
                    [org.clojure/clojure "1.11.1"]
                    [metosin/ring-swagger "0.22.3"]
                    [prismatic/schema "1.4.1"]]}
-   }
+   :dev
+   {:dependencies [[nubank/matcher-combinators "3.9.1"]]}}
   :repl-options {:init-ns strict-swagger.core})

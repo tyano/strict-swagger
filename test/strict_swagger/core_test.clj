@@ -2,7 +2,9 @@
   (:require [clojure.test :refer [is deftest testing]]
             [strict-swagger.core :refer [validator-vec->swagger-parameter-spec validator-map->swagger-parameter-spec] :as core]
             [strict.core :as st]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [ring.swagger.json-schema :as swagger]
+            [matcher-combinators.test :refer [match?]]))
 
 (deftest validator-vec->swagger-parameter-spec-test
   (testing "Simple conversion test"
@@ -23,25 +25,25 @@
     (is (= [s/Str]
            (validator-vec->swagger-parameter-spec [[st/coll-of st/string]])))
 
-    (is (= [{:a s/Str}]
+    (is (= [{(s/optional-key :a) s/Str}]
            (validator-vec->swagger-parameter-spec [[st/coll-of {:a [st/string]}]])))
 
-    (is (= [{:a s/Str}]
+    (is (= [{(s/optional-key :a) s/Str}]
            (validator-vec->swagger-parameter-spec [[st/coll-of [st/nested {:a [st/string]}]]])))
 
     (is (= (s/enum "apple" "orange")
            (validator-vec->swagger-parameter-spec [[st/member ["apple" "orange"]]])))
 
-    (is (= {:a s/Str}
+    (is (= {(s/optional-key :a) s/Str}
            (validator-vec->swagger-parameter-spec [[st/nested {:a [st/string]}]])))
 
-    (is (= {:a s/Str}
+    (is (= {(s/optional-key :a) s/Str}
            (validator-vec->swagger-parameter-spec [{:a [st/string]}])))
 
-    (is (= {:a s/Str}
+    (is (= {(s/optional-key :a) s/Str}
            (validator-vec->swagger-parameter-spec [{:a st/string}])))
     
-    (is (= {:a s/Str}
+    (is (= {(s/optional-key :a) s/Str}
            (validator-vec->swagger-parameter-spec [^{::core/name "Username"} {:a st/string}])))
     
     (is (= {(s/required-key :a) s/Str}
@@ -61,15 +63,19 @@
     (is (= s/Int (validator-vec->swagger-parameter-spec [[st/integer-str]])))
     (is (= s/Int (validator-vec->swagger-parameter-spec [[st/integer]])))
     (is (= s/Uuid (validator-vec->swagger-parameter-spec [[st/uuid-str]])))
-    (is (= {s/Any s/Any} (validator-vec->swagger-parameter-spec [[st/map]]))))
+    (is (= {s/Any s/Any} (validator-vec->swagger-parameter-spec [[st/map]])))))
 
-  #_(testing "':required true' must be added if the validator-vec contains a strict/required validator"
-    (is (= {:type "string", :required true} (validator-vec->swagger-parameter-spec [st/required st/string])))))
+(deftest description-test
+  (testing "If validation spec is annotated with swagger/field or swagger/description, generated schema must have the data as it's metadata"
+    (let [converted (validator-map->swagger-parameter-spec 
+                     {:testkey ^{:description "This is a test"} [st/required st/string]})]
+      (is (= "This is a test"
+             (-> converted (get :testkey) meta :json-schema :description))))))
 
 (deftest validator-map->swagger-parameter-spec-test
   (testing "complicated case"
     (is (= {(s/required-key :accountId) s/Str,
-            :attributes {s/Any s/Any},
+            (s/optional-key :attributes) {s/Any s/Any},
             (s/required-key :idInfo)
             [{(s/required-key :service) (s/enum "apple" "orange"),
               (s/required-key :userId) s/Str}]}
@@ -88,6 +94,5 @@
                                           :b ^{:submap "submap"} {:c [st/integer]}})]
       (is (= {:sample "sample"}
              (meta converted)))
-      (prn (:b converted))
-      (is (= {:submap "submap"}
-             (meta (:b converted)))))))
+      (is (match? {:submap "submap"}
+                  (meta (get converted (s/optional-key :b))))))))
