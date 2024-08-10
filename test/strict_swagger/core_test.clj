@@ -42,6 +42,10 @@
     
     (is (= {:type "object" :properties {:a {:type "string"}} :required [:a]}
            (validator-vec->swagger-parameter-spec [{:a [st/required st/string]}]))))
+  
+  (testing "if some map have 'additional-properties true' metadata, add 'additionalProperties true' to the swagger spec"
+    (is (= {:type "object" :properties {:a {:type "string"}} :additionalProperties true}
+           (validator-vec->swagger-parameter-spec [^{:additional-properties? true} {:a st/string}]))))
 
   (testing "each validator can be wrapper by vector if the validator doen't have any parameters"
     (is (= {:type "string"} (validator-vec->swagger-parameter-spec [[st/string]])))

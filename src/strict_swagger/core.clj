@@ -73,11 +73,15 @@
         required-props (->> nested-map
                             (filter (fn [[k v]] (contains-required-validator? v)))
                             (map first)
-                            vec)]
+                            vec)
+        additional-props? (:additional-properties? (meta nested-map))]
     (cond-> {:type "object"
              :properties nested-spec}
       (seq required-props)
-      (assoc :required required-props))))
+      (assoc :required required-props)
+      
+      additional-props?
+      (assoc :additionalProperties true))))
 
 
 (defmulti sample-json validator-name)
