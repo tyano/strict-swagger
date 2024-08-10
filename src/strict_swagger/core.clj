@@ -74,7 +74,7 @@
                             (filter (fn [[k v]] (contains-required-validator? v)))
                             (map first)
                             vec)
-        additional-props? (:additional-properties? (meta nested-map))]
+        additional-props? (::additional-properties? (meta nested-map))]
     (cond-> {:type "object"
              :properties nested-spec}
       (seq required-props)

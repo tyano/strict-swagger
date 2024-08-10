@@ -1,6 +1,6 @@
 (ns strict-swagger.core-test
   (:require [clojure.test :refer [is deftest testing]]
-            [strict-swagger.core :refer [validator-vec->swagger-parameter-spec validator-map->swagger-parameter-spec]]
+            [strict-swagger.core :refer [validator-vec->swagger-parameter-spec validator-map->swagger-parameter-spec] :as core]
             [strict.core :as st]))
 
 (deftest validator-vec->swagger-parameter-spec-test
@@ -45,7 +45,7 @@
   
   (testing "if some map have 'additional-properties true' metadata, add 'additionalProperties true' to the swagger spec"
     (is (= {:type "object" :properties {:a {:type "string"}} :additionalProperties true}
-           (validator-vec->swagger-parameter-spec [^{:additional-properties? true} {:a st/string}]))))
+           (validator-vec->swagger-parameter-spec [^::core/additional-properties? {:a st/string}]))))
 
   (testing "each validator can be wrapper by vector if the validator doen't have any parameters"
     (is (= {:type "string"} (validator-vec->swagger-parameter-spec [[st/string]])))
