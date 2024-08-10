@@ -8,6 +8,7 @@
   {:provided 
    {:dependencies [[org.clojars.t_yano/strict "2.0.0"]
                    [org.clojure/clojure "1.11.1"]
-                   [metosin/ring-swagger "0.22.3"]]}
+                   [metosin/ring-swagger "0.22.3"]
+                   [prismatic/schema "1.4.1"]]}
    }
   :repl-options {:init-ns strict-swagger.core})
