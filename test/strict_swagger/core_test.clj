@@ -1,10 +1,10 @@
 (ns strict-swagger.core-test
-  (:require [clojure.test :refer [is deftest testing]]
-            [strict-swagger.core :refer [validator-vec->swagger-parameter-spec validator-map->swagger-parameter-spec] :as core]
-            [strict.core :as st]
+  (:require [clojure.test :refer [deftest is testing]]
+            [matcher-combinators.test :refer [match?]]
             [schema.core :as s]
-            [ring.swagger.json-schema :as swagger]
-            [matcher-combinators.test :refer [match?]]))
+            [strict-swagger.core :refer [validator-map->swagger-parameter-spec
+                                         validator-vec->swagger-parameter-spec] :as core]
+            [strict.core :as st]))
 
 (deftest validator-vec->swagger-parameter-spec-test
   (testing "Simple conversion test"
