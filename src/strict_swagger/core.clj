@@ -18,6 +18,12 @@
     (let [validator (unwrap-validator maybe-validator)]
       (:name validator))))
 
+(defn- contains-required-validator?
+ [spec-vec]
+ (some (fn [validator] (let [validator (unwrap-validator validator)]
+                         (= (:name st/required) (:name validator))))
+       spec-vec))
+
 (defmulti type-of-validator validator-name)
 
 (defmethod type-of-validator :default [_] nil)
@@ -54,18 +60,25 @@
 
 (defmethod type-of-validator (:name st/nested)
   [maybe-validator]
-  (let [nested-map  (cond
-                      (st/validator? maybe-validator)
-                      (throw (ex-info "the parameter of nested validator must be a map" {:nested-validator maybe-validator}))
+  (let [nested-map     (cond
+                         (st/validator? maybe-validator)
+                         (throw (ex-info "the parameter of nested validator must be a map" {:nested-validator maybe-validator}))
 
-                      (map? maybe-validator)
-                      maybe-validator
+                         (map? maybe-validator)
+                         maybe-validator
 
-                      :else
-                      (second maybe-validator))
-        nested-spec (validator-map->swagger-parameter-spec nested-map)]
-    {:type "object"
-     :properties nested-spec}))
+                         :else
+                         (second maybe-validator))
+        nested-spec    (validator-map->swagger-parameter-spec nested-map st/nested)
+        required-props (->> nested-map
+                            (filter (fn [[k v]] (contains-required-validator? v)))
+                            (map first)
+                            vec)]
+    (cond-> {:type "object"
+             :properties nested-spec
+             :additionalProperties true}
+      (seq required-props)
+      (assoc :required required-props))))
 
 
 (defmulti sample-json validator-name)
@@ -101,50 +114,50 @@
                       (second maybe-validator))]
     (into {} (map (fn [[k v]] [k (sample-json v)]) nested-map))))
 
-(deftype FieldValidatorJsonSchema [field-validator]
+(deftype FieldValidatorJsonSchema [validator-vec]
   JsonSchema
   (convert [this option]
-    (validator-vec->swagger-parameter-spec field-validator))
+    (validator-vec->swagger-parameter-spec validator-vec)) 
   
   Object
-  (equals [this right] (= (.-field-validator this) (.-field-validator right)))
-  (hashCode [this] (hash (.-field-validator this)))
-  (toString [this] (str "FieldValidatorJsonSchema(field-validator = " (.-field-validator this) ")")))
+  (equals [this right] (= (.-validator-vec this) (.-validator-vec right)))
+  (hashCode [this] (hash (.-validator-vec this)))
+  (toString [this] (str "FieldValidatorJsonSchema(validator-vec = " (.-validator-vec this) ")")))
+
+(defn validator
+  [^FieldValidatorJsonSchema schema]
+  (.-validator-vec schema))
 
 (defn validator-json-schema [validator-vec] (FieldValidatorJsonSchema. validator-vec))
 
 (add-encoder FieldValidatorJsonSchema
              (fn [item json-generator]
-               (let [field-validator-vec (.-field-validator item)]
-                 (.writeString json-generator (sample-json field-validator-vec)))))
+               (let [validator-vec-vec (.-validator-vec item)]
+                 (.writeString json-generator (sample-json validator-vec-vec)))))
 
 (defn validator-vec->swagger-parameter-spec
-  [validator-vec] 
-  (letfn [(contains-required-validator?
-           [spec-vec]
-           (some (fn [validator] (let [validator (unwrap-validator validator)]
-                                   (= (:name st/required) (:name validator))))
-                 spec-vec))
-          
-          (resolve-type
+  [validator-vec & [parent-validator]] 
+  (letfn [(resolve-type
            [spec-vec]
            (let [reversed (reverse spec-vec)]
              (some type-of-validator reversed)))]
     
     (let [validator-vec (if (st/validator? validator-vec) [validator-vec] validator-vec)
-          type-map (resolve-type validator-vec)]
+          type-map  (resolve-type validator-vec)
+          required? (contains-required-validator? validator-vec)]
       (cond-> {}
-        (contains-required-validator? validator-vec)
+        (and (not (= (:name st/nested) (:name parent-validator)))
+             required?)
         (assoc :required true)
 
         (some? type-map)
         (merge type-map)))))
 
 (defn validator-map->swagger-parameter-spec
-  [param-validators-map]
+  [param-validators-map & [parent-validator]]
   (into {}
         (map (fn [[param-name validators]]
-               [param-name (validator-vec->swagger-parameter-spec validators)]))
+               [param-name (validator-vec->swagger-parameter-spec validators parent-validator)]))
         param-validators-map))
 
 (defn json-schema

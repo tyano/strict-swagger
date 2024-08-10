@@ -22,23 +22,26 @@
     (is (= {:type "array" :items {:type "string"}}
            (validator-vec->swagger-parameter-spec [[st/coll-of st/string]])))
 
-    (is (= {:type "array" :items {:type "object" :properties {:a {:type "string"}}}}
+    (is (= {:type "array" :items {:type "object" :properties {:a {:type "string"}} :additionalProperties true}}
            (validator-vec->swagger-parameter-spec [[st/coll-of {:a [st/string]}]])))
 
-    (is (= {:type "array" :items {:type "object" :properties {:a {:type "string"}}}}
+    (is (= {:type "array" :items {:type "object" :properties {:a {:type "string"}} :additionalProperties true}}
            (validator-vec->swagger-parameter-spec [[st/coll-of [st/nested {:a [st/string]}]]])))
 
     (is (= {:type "string" :enum ["apple" "orange"]}
            (validator-vec->swagger-parameter-spec [[st/member ["apple" "orange"]]])))
 
-    (is (= {:type "object" :properties {:a {:type "string"}}}
+    (is (= {:type "object" :properties {:a {:type "string"}} :additionalProperties true}
            (validator-vec->swagger-parameter-spec [[st/nested {:a [st/string]}]])))
 
-    (is (= {:type "object" :properties {:a {:type "string"}}}
+    (is (= {:type "object" :properties {:a {:type "string"}} :additionalProperties true}
            (validator-vec->swagger-parameter-spec [{:a [st/string]}])))
 
-    (is (= {:type "object" :properties {:a {:type "string"}}}
-           (validator-vec->swagger-parameter-spec [{:a st/string}]))))
+    (is (= {:type "object" :properties {:a {:type "string"}} :additionalProperties true}
+           (validator-vec->swagger-parameter-spec [{:a st/string}])))
+    
+    (is (= {:type "object" :properties {:a {:type "string"}} :additionalProperties true :required [:a]}
+           (validator-vec->swagger-parameter-spec [{:a [st/required st/string]}]))))
 
   (testing "each validator can be wrapper by vector if the validator doen't have any parameters"
     (is (= {:type "string"} (validator-vec->swagger-parameter-spec [[st/string]])))
@@ -66,10 +69,11 @@
              {:type "object",
               :properties
               {:service
-               {:required true,
-                :type "string",
+               {:type "string",
                 :enum ["apple" "orange"]},
-               :userId {:required true, :type "string"}}}}}
+               :userId {:type "string"}}
+              :additionalProperties true
+              :required [:service :userId]}}}
 
            (validator-map->swagger-parameter-spec
             {:accountId [st/required
