@@ -1,7 +1,7 @@
 (ns strict-swagger.core
-  (:require [strict.core :as st]
+  (:require [cheshire.generate :refer [add-encoder]]
             [ring.swagger.json-schema :refer [JsonSchema]]
-            [cheshire.generate :refer [add-encoder]]))
+            [strict.core :as st]))
 
 (defn- unwrap-validator [validator] (if (vector? validator) (first validator) validator))
 
@@ -75,8 +75,7 @@
                             (map first)
                             vec)]
     (cond-> {:type "object"
-             :properties nested-spec
-             :additionalProperties true}
+             :properties nested-spec}
       (seq required-props)
       (assoc :required required-props))))
 
