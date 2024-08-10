@@ -16,30 +16,29 @@
     (is (= {:type "string" :format "uuid"} (validator-vec->swagger-parameter-spec [st/uuid-str])))
     (is (= {:type "object"} (validator-vec->swagger-parameter-spec [st/map])))
 
-    (is (= {:type "string" :enum ["a" "b" "c"]} 
+    (is (= {:type "string" :enum ["a" "b" "c"]}
            (validator-vec->swagger-parameter-spec [[st/member ["a" "b" "c"]]])))
-    
-    (is (= {:type "array" :items {:type "string"}} 
+
+    (is (= {:type "array" :items {:type "string"}}
            (validator-vec->swagger-parameter-spec [[st/coll-of st/string]])))
 
-    (is (= {:type "array" :items {:type "object" :properties {:a {:type "string"}}}} 
+    (is (= {:type "array" :items {:type "object" :properties {:a {:type "string"}}}}
            (validator-vec->swagger-parameter-spec [[st/coll-of {:a [st/string]}]])))
-    
+
     (is (= {:type "array" :items {:type "object" :properties {:a {:type "string"}}}}
            (validator-vec->swagger-parameter-spec [[st/coll-of [st/nested {:a [st/string]}]]])))
-    
-    (is (= {:type "string" :enum ["apple" "orange"]} 
+
+    (is (= {:type "string" :enum ["apple" "orange"]}
            (validator-vec->swagger-parameter-spec [[st/member ["apple" "orange"]]])))
-    
-    (is (= {:type "object" :properties {:a {:type "string"}}} 
+
+    (is (= {:type "object" :properties {:a {:type "string"}}}
            (validator-vec->swagger-parameter-spec [[st/nested {:a [st/string]}]])))
-    
+
     (is (= {:type "object" :properties {:a {:type "string"}}}
            (validator-vec->swagger-parameter-spec [{:a [st/string]}])))
-    
+
     (is (= {:type "object" :properties {:a {:type "string"}}}
-           (validator-vec->swagger-parameter-spec [{:a st/string}])))
-    ) 
+           (validator-vec->swagger-parameter-spec [{:a st/string}]))))
 
   (testing "each validator can be wrapper by vector if the validator doen't have any parameters"
     (is (= {:type "string"} (validator-vec->swagger-parameter-spec [[st/string]])))
@@ -52,7 +51,7 @@
     (is (= {:type "integer"} (validator-vec->swagger-parameter-spec [[st/integer]])))
     (is (= {:type "string" :format "uuid"} (validator-vec->swagger-parameter-spec [[st/uuid-str]])))
     (is (= {:type "object"} (validator-vec->swagger-parameter-spec [[st/map]]))))
-  
+
   (testing "':required true' must be added if the validator-vec contains a strict/required validator"
     (is (= {:type "string", :required true} (validator-vec->swagger-parameter-spec [st/required st/string])))))
 
@@ -71,7 +70,7 @@
                 :type "string",
                 :enum ["apple" "orange"]},
                :userId {:required true, :type "string"}}}}}
-           
+
            (validator-map->swagger-parameter-spec
             {:accountId [st/required
                          st/string]
