@@ -1,6 +1,7 @@
 (ns strict-swagger.core
   (:require [schema.core :as s]
-            [strict.core :as st]))
+            [strict.core :as st]
+            [ring.swagger.json-schema :as swagger]))
 
 (defn- unwrap-validator [validator] (if (vector? validator) (first validator) validator))
 
@@ -78,7 +79,7 @@
      (into {}
            (map (fn [[k v]] [(if (required-props k)
                                (s/required-key k)
-                               k)
+                               (s/optional-key k))
                              (validator-vec->swagger-parameter-spec v)]))
            nested-map)
       (some? metadata)
@@ -96,8 +97,8 @@
                           [validator-vec]
                           
                           (map? validator-vec)
-                          [validator-vec]
-                          
+                          [st/nested validator-vec]
+
                           :else
                           validator-vec)]
       (resolve-type validator-vec))))
@@ -110,7 +111,7 @@
                          (let [required? (contains-required-validator? validators)]
                            [(if required?
                               (s/required-key param-name)
-                              param-name)
+                              (s/optional-key param-name))
                             (validator-vec->swagger-parameter-spec validators)])))
                   param-validators-map)
       (some? metadata)
