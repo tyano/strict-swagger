@@ -1,4 +1,4 @@
-(defproject org.clojars.t_yano/strict-swagger "1.0.0"
+(defproject org.clojars.t_yano/strict-swagger "1.0.1"
   :description "The library to generate a map-data for ring-swagger from the validation spec of 'strict' library."
   :url "https://github.com/tyano/strict-swagger"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
