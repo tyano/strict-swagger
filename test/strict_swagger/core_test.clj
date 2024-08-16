@@ -17,6 +17,7 @@
     (is (= s/Int (validator-vec->swagger-parameter-spec [st/integer-str])))
     (is (= s/Int (validator-vec->swagger-parameter-spec [st/integer])))
     (is (= s/Uuid (validator-vec->swagger-parameter-spec [st/uuid-str])))
+    (is (= s/Uuid (validator-vec->swagger-parameter-spec [st/uuid])))
     (is (= {s/Any s/Any} (validator-vec->swagger-parameter-spec [st/map])))
 
     (is (= (s/enum "a" "b" "c")

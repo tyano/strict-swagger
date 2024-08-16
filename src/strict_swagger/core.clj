@@ -36,6 +36,7 @@
 (defmethod type-of-validator (:name st/integer-str) [_] s/Int)
 (defmethod type-of-validator (:name st/integer) [_] s/Int)
 (defmethod type-of-validator (:name st/uuid-str) [_] s/Uuid)
+(defmethod type-of-validator (:name st/uuid) [_] s/Uuid)
 (defmethod type-of-validator (:name st/member) [maybe-validator] (apply s/enum (second maybe-validator)))
 (defmethod type-of-validator (:name st/map) [_] {s/Any s/Any})
 
